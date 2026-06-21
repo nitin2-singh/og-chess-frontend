@@ -1,0 +1,303 @@
+"use client";
+
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Crown, Loader2, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { z } from "zod";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { AxiosError } from "axios";
+
+// 1. Strict Validation Schema using Zod
+const signupSchema = z
+  .object({
+    username: z
+      .string()
+      .min(3, { message: "Username must be at least 3 characters." })
+      .max(16, { message: "Username must be at most 16 characters." })
+      .regex(
+        /^[a-zA-Z0-9_]+$/,
+        "Only letters, numbers, and underscores allowed.",
+      ),
+    email: z.string().email({ message: "Please enter a valid email address." }),
+    password: z
+      .string()
+      .min(8, { message: "Password must be at least 8 characters long." })
+      .regex(/[a-z]/, {
+        message: "Password must contain at least one lowercase letter.",
+      })
+      .regex(/[0-9]/, { message: "Password must contain at least one number." })
+      .regex(/[^a-zA-Z0-9]/, {
+        message: "Password must contain at least one special character.",
+      }),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match.",
+    path: ["confirmPassword"], // Sets the error specifically on the confirmPassword field
+  });
+
+export default function SignupPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const form = useForm<z.infer<typeof signupSchema>>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+    mode: "onChange", // Triggers validation as they type for immediate feedback
+  });
+
+  async function onSubmit(data: z.infer<typeof signupSchema>) {
+    setIsLoading(true);
+    console.log("data", data);
+    try {
+      // Simulate network request (Replace with actual backend registration)
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      toast.success("Account created!", {
+        description: "Welcome to OgChess. You can now start a match.",
+        icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
+      });
+
+      // Redirect logic here (e.g., router.push('/dashboard'))
+    } catch (error) {
+      if (error instanceof AxiosError)
+        toast.error("Registration Failed", {
+          description: error.message || "Could not create account. Try again.",
+        });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] flex flex-col items-center justify-center p-4 sm:p-8 selection:bg-indigo-500/30 transition-colors duration-300 relative overflow-hidden">
+      {/* Background Grid & Glow */}
+      <div className="absolute inset-0 z-0 h-full w-full bg-[linear-gradient(to_right,#0000000a_1px,transparent_1px),linear-gradient(to_bottom,#0000000a_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-size-[24px_24px]">
+        <div className="absolute left-1/2 top-1/4 -z-10 h-77.5 w-77.5 -translate-x-1/2 rounded-full bg-indigo-400 dark:bg-indigo-500 opacity-20 blur-[120px]"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        {/* Signup Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white/80 dark:bg-[#0f172a]/80 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/20 dark:shadow-none"
+        >
+          {/* Header */}
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-linear-to-tr from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-purple-600 mb-4 shadow-lg shadow-indigo-500/30">
+              <Crown className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">
+              Create an account
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Join OgChess to play ranked 1v1 matches.
+            </p>
+          </div>
+
+          {/* Form */}
+          <form
+            id="signup-form"
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-5"
+          >
+            {/* Username Field */}
+            <Controller
+              name="username"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid} className="w-full">
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-slate-700 dark:text-slate-300"
+                  >
+                    Username
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    placeholder="chess_master_99"
+                    aria-invalid={fieldState.invalid}
+                    className="h-12 bg-slate-50 dark:bg-[#020617]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[fieldState.error]}
+                      className="text-red-500 dark:text-red-400"
+                    />
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Email Field */}
+            <Controller
+              name="email"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid} className="w-full">
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-slate-700 dark:text-slate-300"
+                  >
+                    Email
+                  </FieldLabel>
+                  <Input
+                    {...field}
+                    id={field.name}
+                    type="email"
+                    placeholder="you@example.com"
+                    aria-invalid={fieldState.invalid}
+                    className="h-12 bg-slate-50 dark:bg-[#020617]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400"
+                  />
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[fieldState.error]}
+                      className="text-red-500 dark:text-red-400"
+                    />
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Password Field */}
+            <Controller
+              name="password"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid} className="w-full">
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-slate-700 dark:text-slate-300"
+                  >
+                    Password
+                  </FieldLabel>
+                  <div className="relative w-full">
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Create a strong password"
+                      aria-invalid={fieldState.invalid}
+                      className="h-12 bg-slate-50 dark:bg-[#020617]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  {/* Password Hint / Error */}
+                  {fieldState.invalid ? (
+                    <FieldError
+                      errors={[fieldState.error]}
+                      className="text-red-500 dark:text-red-400"
+                    />
+                  ) : (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                      Must be at least 8 characters, include a number, a
+                      lowercase letter, and a special character.
+                    </p>
+                  )}
+                </Field>
+              )}
+            />
+
+            {/* Confirm Password Field */}
+            <Controller
+              name="confirmPassword"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid} className="w-full">
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-slate-700 dark:text-slate-300"
+                  >
+                    Confirm Password
+                  </FieldLabel>
+                  <div className="relative w-full">
+                    <Input
+                      {...field}
+                      id={field.name}
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirm your password"
+                      aria-invalid={fieldState.invalid}
+                      className="h-12 bg-slate-50 dark:bg-[#020617]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400 pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  {fieldState.invalid && (
+                    <FieldError
+                      errors={[fieldState.error]}
+                      className="text-red-500 dark:text-red-400"
+                    />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Button
+              type="submit"
+              form="signup-form"
+              disabled={isLoading}
+              className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 font-medium rounded-xl transition-all shadow-md mt-6"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                "Create Account"
+              )}
+            </Button>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center text-sm text-slate-600 dark:text-slate-400">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-indigo-600 hover:text-indigo-700 dark:text-white dark:hover:text-slate-300 transition-colors"
+            >
+              Sign in
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
