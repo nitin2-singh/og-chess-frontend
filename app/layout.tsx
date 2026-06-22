@@ -3,6 +3,7 @@ import { Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/theme-provider";
 import WebsiteNavbar from "@/components/website/navbar";
+import { Toaster } from "sonner";
 
 // 2. Configure a monospace font for chess notation/engine stats
 const fontMono = Roboto_Mono({
@@ -35,6 +36,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Toaster />
           <WebsiteNavbar />
           {children}
         </ThemeProvider>

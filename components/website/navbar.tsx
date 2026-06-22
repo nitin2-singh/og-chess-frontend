@@ -1,65 +1,136 @@
 "use client";
-import { Crown, Menu, Moon, Sun } from "lucide-react";
-import { Button } from "../ui/button";
-import { useTheme } from "next-themes";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Crown, LogOut, Moon, Sun, User } from "lucide-react";
+import { useTheme } from "next-themes";
+
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuthStore } from "@/store/auth.store";
 
 export default function WebsiteNavbar() {
   const router = useRouter();
+
   const { theme, setTheme } = useTheme();
 
+  const { user, logout } = useAuthStore();
+
+  const avatar =
+    user &&
+    `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(
+      `${user.first_name} ${user.last_name}`,
+    )}&backgroundType=gradientLinear`;
+
   return (
-    <nav className="fixed top-0 w-full z-50 border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-[#020617]/70 backdrop-blur-md transition-colors duration-300">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 max-w-7xl mx-auto">
+    <nav className="fixed top-0 z-50 w-full border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-[#020617]/70 backdrop-blur-xl">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
         {/* Logo */}
-        <div
-          onClick={() => {
-            router.push("/");
-          }}
+        <button
+          onClick={() => router.push("/")}
           className="flex items-center gap-2"
         >
-          <div className="relative flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-linear-to-tr from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-purple-600">
-            <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-tr from-indigo-500 to-indigo-600 dark:from-indigo-600 dark:to-purple-600 shadow-lg shadow-indigo-500/20">
+            <Crown className="h-5 w-5 text-white" />
           </div>
-          <span className="text-lg sm:text-xl font-bold tracking-tight bg-clip-text text-transparent bg-linear-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 hidden xs:block">
+
+          <span className="hidden bg-linear-to-r from-slate-900 to-slate-600 bg-clip-text text-xl font-bold tracking-tight text-transparent dark:from-white dark:to-slate-400 sm:block">
             OgChess
           </span>
-        </div>
+        </button>
 
-        {/* Nav Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          <Link href={"/login"}>
-            <Button
-              variant="ghost"
-              className="hidden md:inline-flex text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/10"
-            >
-              Sign In
-            </Button>
-          </Link>
+        <div className="flex items-center gap-2">
+          {!user ? (
+            <>
+              <Link href="/login">
+                <Button variant="ghost" className="hidden md:flex">
+                  Sign In
+                </Button>
+              </Link>
 
-          <Link href={"/signup"}>
-            <Button className="h-9 sm:h-10 px-4 sm:px-6 rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 transition-all font-medium text-xs sm:text-sm shadow-md">
-              Sign Up
-            </Button>
-          </Link>
+              <Link href="/signup">
+                <Button className="rounded-full px-6">Sign Up</Button>
+              </Link>
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded-full transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                  <Avatar className="h-8 w-8 border-2 border-slate-200 shadow-md dark:border-slate-700">
+                    <AvatarImage src={avatar ?? ""} />
 
-          {/* Theme Toggle */}
+                    <AvatarFallback>
+                      {user.first_name[0]}
+                      {user.last_name[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                </button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-72 rounded-2xl">
+                <DropdownMenuLabel className="pb-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-14 w-14">
+                      <AvatarImage src={avatar ?? ""} />
+
+                      <AvatarFallback>{user.first_name[0]}</AvatarFallback>
+                    </Avatar>
+
+                    <div className="min-w-0">
+                      <h4 className="truncate text-sm font-semibold">
+                        {user.first_name} {user.last_name}
+                      </h4>
+
+                      <p className="truncate text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  onClick={() => router.push("/rooms")}
+                  className="cursor-pointer py-3"
+                >
+                  <User className="mr-2 h-4 w-4" />
+                  Rooms
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-500 focus:text-red-500"
+                  onClick={() => {
+                    logout();
+                    router.replace("/login");
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 rounded-full text-slate-500 hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors"
-            aria-label="Toggle theme"
+            className="rounded-full p-2 transition-colors hover:bg-slate-200 dark:hover:bg-white/10"
           >
             {theme === "dark" ? (
-              <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Sun className="h-5 w-5" />
             ) : (
-              <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Moon className="h-5 w-5" />
             )}
-          </button>
-
-          {/* Mobile Menu Icon */}
-          <button className="md:hidden p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
-            <Menu className="w-5 h-5" />
           </button>
         </div>
       </div>

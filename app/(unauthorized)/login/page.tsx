@@ -14,6 +14,8 @@ import { Input } from "@/components/ui/input";
 // Using the NEW shadcn UI pattern
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { AxiosError } from "axios";
+import { axiosInstance } from "@/lib/axios-instance";
+import { cookies } from "@/lib/cookie";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -38,16 +40,12 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Simulate network request
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          if (data.email === "test@error.com") {
-            reject(new Error("Invalid email or password. Please try again."));
-          } else {
-            resolve("Success");
-          }
-        }, 1500);
-      });
+      const res = await axiosInstance.post("auth/login", data);
+
+      if (res.data) {
+        cookies.setAccessToken(res.data.access_token);
+        cookies.setRefreshToken(res.data.refresh_token);
+      }
 
       toast.success("Welcome back!", {
         description: "You have successfully signed in.",
@@ -55,7 +53,8 @@ export default function LoginPage() {
     } catch (error) {
       if (error instanceof AxiosError)
         toast.error("Authentication Failed", {
-          description: error.message || "Something went wrong.",
+          description:
+            error?.response?.data?.message || "Something went wrong.",
         });
     } finally {
       setIsLoading(false);

@@ -13,18 +13,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { AxiosError } from "axios";
+import { axiosInstance } from "@/lib/axios-instance";
+import { cookies } from "@/lib/cookie";
 
 // 1. Strict Validation Schema using Zod
 const signupSchema = z
   .object({
-    username: z
+    first_name: z
       .string()
-      .min(3, { message: "Username must be at least 3 characters." })
-      .max(16, { message: "Username must be at most 16 characters." })
-      .regex(
-        /^[a-zA-Z0-9_]+$/,
-        "Only letters, numbers, and underscores allowed.",
-      ),
+      .min(2, { message: "First name must be at least 2 characters." })
+      .max(50, { message: "First name must be at most 50 characters." }),
+
+    last_name: z
+      .string()
+      .min(2, { message: "Last name must be at least 2 characters." })
+      .max(50, { message: "Last name must be at most 50 characters." }),
     email: z.string().email({ message: "Please enter a valid email address." }),
     password: z
       .string()
@@ -51,7 +54,8 @@ export default function SignupPage() {
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: "",
+      first_name: "",
+      last_name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -61,10 +65,18 @@ export default function SignupPage() {
 
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
-    console.log("data", data);
     try {
+      const { confirmPassword, ...rest } = { ...data };
+      console.log("confirmPassword", confirmPassword);
       // Simulate network request (Replace with actual backend registration)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const res = await axiosInstance.post("/auth/signup", {
+        ...rest,
+      });
+
+      if (res.data) {
+        cookies.setAccessToken(res.data.access_token);
+        cookies.setRefreshToken(res.data.refresh_token);
+      }
 
       toast.success("Account created!", {
         description: "Welcome to OgChess. You can now start a match.",
@@ -75,7 +87,9 @@ export default function SignupPage() {
     } catch (error) {
       if (error instanceof AxiosError)
         toast.error("Registration Failed", {
-          description: error.message || "Could not create account. Try again.",
+          description:
+            error?.response?.data?.message ||
+            "Could not create account. Try again.",
         });
     } finally {
       setIsLoading(false);
@@ -116,30 +130,44 @@ export default function SignupPage() {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-5"
           >
-            {/* Username Field */}
+            {/* first name Field */}
             <Controller
-              name="username"
+              name="first_name"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid} className="w-full">
-                  <FieldLabel
-                    htmlFor={field.name}
-                    className="text-slate-700 dark:text-slate-300"
-                  >
-                    Username
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>First Name</FieldLabel>
+
                   <Input
                     {...field}
                     id={field.name}
-                    placeholder="chess_master_99"
+                    placeholder="Nitin"
                     aria-invalid={fieldState.invalid}
-                    className="h-12 bg-slate-50 dark:bg-[#020617]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-400"
                   />
+
                   {fieldState.invalid && (
-                    <FieldError
-                      errors={[fieldState.error]}
-                      className="text-red-500 dark:text-red-400"
-                    />
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+            {/* last name Field */}
+            <Controller
+              name="last_name"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor={field.name}>Last Name</FieldLabel>
+
+                  <Input
+                    {...field}
+                    id={field.name}
+                    placeholder="Negi"
+                    aria-invalid={fieldState.invalid}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
                   )}
                 </Field>
               )}
