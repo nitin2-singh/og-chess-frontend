@@ -16,6 +16,7 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { AxiosError } from "axios";
 import { axiosInstance } from "@/lib/axios-instance";
 import { cookies } from "@/lib/cookie";
+import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -27,7 +28,7 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
+  const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -45,11 +46,13 @@ export default function LoginPage() {
       if (res.data) {
         cookies.setAccessToken(res.data.access_token);
         cookies.setRefreshToken(res.data.refresh_token);
-      }
 
-      toast.success("Welcome back!", {
-        description: "You have successfully signed in.",
-      });
+        toast.success("Welcome back!", {
+          description: "You have successfully signed in.",
+        });
+
+        router.push("/rooms");
+      }
     } catch (error) {
       if (error instanceof AxiosError)
         toast.error("Authentication Failed", {

@@ -7,7 +7,7 @@ export default function AuthLayout({
 }>) {
   return (
     <>
-      <div className="pt-18">
+      <div className="">
         <PseduoComponent />
         {children}
       </div>

@@ -15,6 +15,7 @@ import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import { AxiosError } from "axios";
 import { axiosInstance } from "@/lib/axios-instance";
 import { cookies } from "@/lib/cookie";
+import { useRouter } from "next/navigation";
 
 // 1. Strict Validation Schema using Zod
 const signupSchema = z
@@ -50,6 +51,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
@@ -76,6 +78,7 @@ export default function SignupPage() {
       if (res.data) {
         cookies.setAccessToken(res.data.access_token);
         cookies.setRefreshToken(res.data.refresh_token);
+        router.push("/rooms");
       }
 
       toast.success("Account created!", {

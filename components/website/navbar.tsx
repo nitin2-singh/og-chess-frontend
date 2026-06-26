@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Crown, LogOut, Moon, Sun, User } from "lucide-react";
 import { useTheme } from "next-themes";
 
@@ -19,7 +19,7 @@ import { useAuthStore } from "@/store/auth.store";
 
 export default function WebsiteNavbar() {
   const router = useRouter();
-
+  const pathname = usePathname();
   const { theme, setTheme } = useTheme();
 
   const { user, logout } = useAuthStore();
@@ -29,6 +29,8 @@ export default function WebsiteNavbar() {
     `https://api.dicebear.com/9.x/personas/svg?seed=${encodeURIComponent(
       `${user.first_name} ${user.last_name}`,
     )}&backgroundType=gradientLinear`;
+
+  if (pathname.includes("/play/")) return null;
 
   return (
     <nav className="fixed top-0 z-50 w-full border-b border-slate-200/50 dark:border-white/5 bg-white/70 dark:bg-[#020617]/70 backdrop-blur-xl">

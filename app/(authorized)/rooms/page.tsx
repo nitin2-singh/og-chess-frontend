@@ -33,6 +33,7 @@ import { PlayerColor, GameStatus, GameResult } from "@/types/games";
 import { useCreateRoom } from "./_hooks/use-create-room";
 import { useRooms } from "./_hooks/use-fetch-room";
 import { DOMAIN_NAME } from "@/lib/constant";
+import { useRouter } from "next/navigation";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -51,7 +52,7 @@ export default function RoomsPage() {
 
   // Join State
   const [joinCode, setJoinCode] = useState("");
-
+  const router = useRouter();
   // Table & Pagination State
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -132,7 +133,7 @@ export default function RoomsPage() {
   const totalItems = roomsData?.total || 0;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-50 font-sans selection:bg-indigo-500/30 transition-colors duration-300 relative overflow-hidden p-4 sm:p-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-900 dark:text-slate-50 font-sans selection:bg-indigo-500/30 transition-colors duration-300 relative overflow-hidden p-4 sm:p-8 mt-4">
       {/* Background Ambient Glow */}
       <div className="absolute top-0 right-1/4 -z-10 h-100 w-100 rounded-full bg-indigo-400 dark:bg-indigo-600 opacity-10 dark:opacity-20 blur-[140px] pointer-events-none"></div>
 
@@ -282,6 +283,13 @@ export default function RoomsPage() {
                 className="h-12 bg-slate-50 dark:bg-[#020617]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white"
               />
               <Button
+                onClick={() => {
+                  const id = joinCode.split("/").pop();
+                  if (id) router.push(`/play/${id}`);
+                  else {
+                    toast.error("Invalid Code");
+                  }
+                }}
                 disabled={!joinCode.trim()}
                 className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 rounded-xl transition-all"
               >
@@ -339,6 +347,7 @@ export default function RoomsPage() {
                     return (
                       <TableRow
                         key={room.id}
+                        onClick={() => router.push(`/play/${room.room_code}`)}
                         className="border-slate-200 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer"
                       >
                         {/* Room Name & Players */}

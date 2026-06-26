@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = ["/login", "/signup"];
 
-const PROTECTED_ROUTES = ["/rooms"];
+const PROTECTED_ROUTES = ["/rooms", "/play"];
 
 const COOKIE_NAME = process.env.AUTH_COOKIE ?? "access_token";
 
