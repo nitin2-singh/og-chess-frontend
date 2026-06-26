@@ -52,6 +52,7 @@ export interface RoomResponseDto {
   ended_at: number;
   created_at: number;
   updated_at: number;
+  moves: string[];
 }
 
 export interface PaginatedRoomsDto {

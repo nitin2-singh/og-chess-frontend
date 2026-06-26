@@ -27,6 +27,7 @@ import { useRoom } from "./_hooks/use-fetch-room";
 
 import { useGameSocket, playSound, SOUNDS } from "./_hooks/use-game-socket";
 import { useMove } from "./_hooks/use-move";
+import { DOMAIN_NAME } from "@/lib/constant";
 
 export default function DefaultPlayPage() {
   const { roomId } = useParams<{ roomId: string }>();
@@ -41,7 +42,8 @@ export default function DefaultPlayPage() {
   const [drawOfferFrom, setDrawOfferFrom] = useState<string | null>(null);
   const movesEndRef = useRef<HTMLTableRowElement>(null);
 
-  const { makeMove, resignGame, offerDraw, acceptDraw, declineDraw } = useMove();
+  const { makeMove, resignGame, offerDraw, acceptDraw, declineDraw } =
+    useMove();
 
   const isWhite = room?.white_player?.id === currentUser?.id;
   const isBlack = room?.black_player?.id === currentUser?.id;
@@ -58,7 +60,7 @@ export default function DefaultPlayPage() {
     },
     () => {
       setDrawOfferFrom(null);
-    }
+    },
   );
 
   // Unlock audio context on first user click/keydown to bypass strict browser autoplay limits
@@ -66,7 +68,8 @@ export default function DefaultPlayPage() {
     const unlock = () => {
       const audio = new Audio(SOUNDS.MOVE);
       audio.volume = 0.01;
-      audio.play()
+      audio
+        .play()
         .then(() => {
           document.removeEventListener("click", unlock);
           document.removeEventListener("keydown", unlock);
@@ -98,7 +101,8 @@ export default function DefaultPlayPage() {
     if (!targetSquare) return false;
 
     const currentTurn = game.turn();
-    const isMyTurn = (currentTurn === "w" && isWhite) || (currentTurn === "b" && isBlack);
+    const isMyTurn =
+      (currentTurn === "w" && isWhite) || (currentTurn === "b" && isBlack);
 
     if (!isMyTurn) {
       toast.error("It is not your turn!");
@@ -121,6 +125,14 @@ export default function DefaultPlayPage() {
         // 3. Update the UI instantly (Optimistic Update)
         setGame(gameCopy);
         useGameStore.getState().setFen(gameCopy.fen());
+        if (room) {
+          useGameStore.setState({
+            room: {
+              ...room,
+              moves: [...(room.moves || []), move.san],
+            },
+          });
+        }
 
         // Play correct sound instantly based on move consequence
         if (gameCopy.isCheckmate()) {
@@ -137,11 +149,20 @@ export default function DefaultPlayPage() {
         makeMove(sourceSquare, targetSquare, () => {
           setGame(new Chess(previousFen)); // Revert board
           useGameStore.getState().setFen(previousFen); // Revert store FEN
+          if (room) {
+            useGameStore.setState({
+              room: {
+                ...room,
+                moves: room.moves ? room.moves.slice(0, -1) : [],
+              },
+            });
+          }
         });
 
         return true;
       }
     } catch (e) {
+      console.log("Error", e);
       return false; // Invalid move locally
     }
     return false;
@@ -149,7 +170,7 @@ export default function DefaultPlayPage() {
 
   const handleCopyLink = () => {
     if (room?.room_code) {
-      const link = `ogchess.com/play/${room.room_code}`;
+      const link = `${DOMAIN_NAME}/play/${room.room_code}`;
       navigator.clipboard.writeText(link);
       toast.success("Link copied!", {
         description: "Send this to your opponent to start.",
@@ -157,7 +178,7 @@ export default function DefaultPlayPage() {
     }
   };
 
-  const moveHistory = game.history();
+  const moveHistory = room?.moves || [];
   const chunkedMoves = [];
   for (let i = 0; i < moveHistory.length; i += 2) {
     chunkedMoves.push({
@@ -333,7 +354,9 @@ export default function DefaultPlayPage() {
                 canDragPiece: ({ piece }) => {
                   if (room?.status !== GameStatus.PLAYING) return false;
                   const currentTurn = game.turn();
-                  const isMyTurn = (currentTurn === "w" && isWhite) || (currentTurn === "b" && isBlack);
+                  const isMyTurn =
+                    (currentTurn === "w" && isWhite) ||
+                    (currentTurn === "b" && isBlack);
                   if (!isMyTurn) return false;
                   return (
                     (currentTurn === "w" && piece.pieceType.startsWith("w")) ||
@@ -363,9 +386,6 @@ export default function DefaultPlayPage() {
                   Black
                 </p>
               </div>
-            </div>
-            <div className="bg-slate-200 dark:bg-slate-800 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md font-mono text-base sm:text-xl font-bold text-slate-700 dark:text-slate-300 shrink-0">
-              10:00
             </div>
           </div>
 
@@ -440,9 +460,6 @@ export default function DefaultPlayPage() {
                   White
                 </p>
               </div>
-            </div>
-            <div className="bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md font-mono text-base sm:text-xl font-bold text-emerald-700 dark:text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)] shrink-0">
-              10:00
             </div>
           </div>
 

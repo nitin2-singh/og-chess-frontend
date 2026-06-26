@@ -139,13 +139,24 @@ export default function RoomsPage() {
 
       <div className="max-w-7xl mx-auto space-y-8 relative z-10 pt-4 sm:pt-8">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Rooms Dashboard
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2">
-            Configure a new match or review your game history.
-          </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">
+              Rooms Dashboard
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">
+              Configure a new match or review your game history.
+            </p>
+          </div>
+          <div>
+            <Button
+              onClick={() => router.push("/leaderboard")}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white gap-2 h-10 px-4 rounded-xl shadow-md transition-all flex items-center shrink-0"
+            >
+              <Trophy className="w-4 h-4" />
+              Leaderboard
+            </Button>
+          </div>
         </div>
 
         {/* Top Action Bar */}

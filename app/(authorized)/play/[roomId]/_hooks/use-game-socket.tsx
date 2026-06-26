@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { getSocket } from "@/lib/socket";
 import { useGameStore } from "@/store/game.store";
-import { JoinRoomResponse, MoveMadeEvent } from "@/types/socket";
+import { MoveMadeEvent } from "@/types/socket";
 
 export const SOUNDS = {
   MOVE: "/sounds/move.mp3",
@@ -60,9 +60,15 @@ export const useGameSocket = (
       socket.emit(
         "join-room",
         { roomId: roomCode },
-        (response: any) => {
+        (response: {
+          status?: string;
+          error?: string;
+          roomId?: string;
+          fen: string;
+          message?: string;
+        }) => {
           if (response?.status === "error" || response?.error) {
-            toast.error(response.message || "Failed to join room");
+            toast.error(response?.message || "Failed to join room");
             return;
           }
           if (response?.roomId) {
@@ -100,6 +106,18 @@ export const useGameSocket = (
       setGameRef.current(new Chess(payload.fen));
       setFen(payload.fen);
 
+      // Update the moves list in the store with the authoritative list from the server payload.
+      // This is broadcasted to both players and is the single source of truth.
+      const roomState = useGameStore.getState().room;
+      if (roomState) {
+        useGameStore.setState({
+          room: {
+            ...roomState,
+            moves: payload.moves || [],
+          },
+        });
+      }
+
       // Play appropriate sound ONLY if the move was made by the opponent.
       // The active player already played the correct sound (move, capture, check, checkmate)
       // synchronously inside onDrop.
@@ -120,8 +138,11 @@ export const useGameSocket = (
       }
     });
 
-    socket.on("game-over", (payload: any) => {
-      if (payload.reason === "resignation" || payload.reason === "draw-agreement") {
+    socket.on("game-over", (payload: { reason: string }) => {
+      if (
+        payload.reason === "resignation" ||
+        payload.reason === "draw-agreement"
+      ) {
         playSound(SOUNDS.CHECKMATE);
       }
       let message = "Match finished!";

@@ -29,6 +29,8 @@ export interface MoveMadeEvent {
   draw: boolean;
 
   gameOver: boolean;
+
+  moves: string[];
 }
 
 export interface JoinRoomResponse {
