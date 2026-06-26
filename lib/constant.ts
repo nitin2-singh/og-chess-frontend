@@ -1,1 +1,1 @@
-export const DOMAIN_NAME = "ogchess.com";
+export const DOMAIN_NAME = "og-chess-frontend.vercel.app/.com";
